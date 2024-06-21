@@ -1,0 +1,33 @@
+name: Prisma Cloud Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Prisma Cloud CLI
+        run: |
+          curl -L https://prisma.pan.dev/docs/prisma_cloud_cli_install | sh
+          prisma login --token ${{ secrets.PRISMA_CLOUD_API_TOKEN }}
+
+      - name: Run Prisma Cloud Scan
+        run: |
+          prisma scan
+
+      - name: Upload scan results
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: prisma-scan-results
+          path: prisma-scan-results.json
